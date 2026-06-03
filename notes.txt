@@ -1,0 +1,8 @@
+Building
+========
+
+./configure --disable-tun --disable-char-posix --disable-char-ppp --disable-char-pty --disable-char-slip --disable-char-tcp --disable-char-termios --disable-char-wincom --disable-readline --disable-atari-st --disable-cpm80 --disable-ibmpc --disable-ibmpc-rom --disable-rc759 --disable-sim405 --disable-sims32 --disable-simarm --disable-vic20 --disable-spectrum --disable-sound-oss
+make -j $(nproc)
+
+Binaries are in src/arch/macplus
+
