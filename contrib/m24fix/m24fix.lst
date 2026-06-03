@@ -1,0 +1,109 @@
+     1                                  ;-----------------------------------------------------------------------------
+     2                                  ; pce
+     3                                  ;-----------------------------------------------------------------------------
+     4                                  
+     5                                  ;-----------------------------------------------------------------------------
+     6                                  ; File name:    m24fix.asm
+     7                                  ; Created:      2017-09-26 by Hampa Hug <hampa@hampa.ch>
+     8                                  ; Copyright:    (C) 2017-2018 Hampa Hug <hampa@hampa.ch>
+     9                                  ;-----------------------------------------------------------------------------
+    10                                  
+    11                                  ;-----------------------------------------------------------------------------
+    12                                  ; This program is free software. You can redistribute it and / or modify it
+    13                                  ; under the terms of the GNU General Public License version 2 as  published
+    14                                  ; by the Free Software Foundation.
+    15                                  ;
+    16                                  ; This program is distributed in the hope  that  it  will  be  useful,  but
+    17                                  ; WITHOUT  ANY   WARRANTY,   without   even   the   implied   warranty   of
+    18                                  ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU  General
+    19                                  ; Public License for more details.
+    20                                  ;-----------------------------------------------------------------------------
+    21                                  
+    22                                  
+    23                                  ; The Olivetti M24 BIOS version 1.0 contains a bug in the int 0x15
+    24                                  ; handler. It returns with a near ret instead of a far ret, resulting
+    25                                  ; in a crash. This TSR fixes this by replacing the int 0x15 handler.
+    26                                  
+    27                                  
+    28                                  section .text
+    29                                  
+    30                                  	org	0x0100
+    31                                  
+    32                                  entry:
+    33 00000000 EB49                    	jmp	start
+    34                                  
+    35                                  
+    36                                  ;-----------------------------------------------------------------------------
+    37                                  ; INT 15 handler
+    38                                  ;-----------------------------------------------------------------------------
+    39                                  newint15:
+    40 00000002 55                      	push	bp
+    41 00000003 89E5                    	mov	bp, sp
+    42                                  
+    43 00000005 804E0601                	or	byte [bp + 6], 1	; Set the carry flag
+    44 00000009 B486                    	mov	ah, 0x86		; Unsupported function
+    45                                  
+    46 0000000B 5D                      	pop	bp
+    47 0000000C CF                      	iret
+    48                                  
+    49                                  res_end:
+    50                                  
+    51                                  
+    52 0000000D 4F6C69766574746920-     msg1	db	"Olivetti M24 BIOS 1.0 fix$"
+    52 00000016 4D32342042494F5320-
+    52 0000001F 312E302066697824   
+    53 00000027 20696E7374616C6C65-     msg2	db	" installed", 0x0d, 0x0a, "$"
+    53 00000030 640D0A24           
+    54 00000034 206E6F7420696E7374-     msg3	db	" not installed", 0x0d, 0x0a, "$"
+    54 0000003D 616C6C65640D0A24   
+    55                                  
+    56                                  compare:
+    57 00000045 F9B486C20200            	db	0xf9, 0xb4, 0x86, 0xc2, 0x02, 0x00
+    58                                  compare_end:
+    59                                  
+    60                                  
+    61                                  ;-----------------------------------------------------------------------------
+    62                                  ; Initialization
+    63                                  ;-----------------------------------------------------------------------------
+    64                                  start:
+    65 0000004B 8CC8                    	mov	ax, cs
+    66 0000004D 8ED8                    	mov	ds, ax
+    67                                  
+    68 0000004F FC                      	cld
+    69                                  
+    70 00000050 B409                    	mov	ah, 0x09
+    71 00000052 BA[0D00]                	mov	dx, msg1
+    72 00000055 CD21                    	int	0x21			; print message
+    73                                  
+    74 00000057 B81535                  	mov	ax, 0x3515
+    75 0000005A CD21                    	int	0x21			; get int 0x15 address
+    76                                  
+    77 0000005C 89DF                    	mov	di, bx
+    78 0000005E BE[4500]                	mov	si, compare
+    79 00000061 B90600                  	mov	cx, compare_end - compare
+    80 00000064 F3A6                    	repe	cmpsb			; check old interrupt routine
+    81 00000066 7519                    	jne	.noinst
+    82                                  
+    83 00000068 B81525                  	mov	ax, 0x2515
+    84 0000006B BA[0200]                	mov	dx, newint15
+    85 0000006E CD21                    	int	0x21			; set int 0x15 address
+    86                                  
+    87 00000070 B409                    	mov	ah, 0x09
+    88 00000072 BA[2700]                	mov	dx, msg2
+    89 00000075 CD21                    	int	0x21			; print message (installed)
+    90                                  
+    91 00000077 B80031                  	mov	ax, 0x3100
+    92 0000007A BA1100                  	mov	dx, (0x100 + res_end - entry + 15) / 16
+    93 0000007D CD21                    	int	0x21			; terminate and stay resident
+    94 0000007F EB0C                    	jmp	.notreached
+    95                                  
+    96                                  .noinst:
+    97 00000081 B409                    	mov	ah, 0x09
+    98 00000083 BA[3400]                	mov	dx, msg3
+    99 00000086 CD21                    	int	0x21			; print message (not installed)
+   100                                  
+   101 00000088 B8014C                  	mov	ax, 0x4c01
+   102 0000008B CD21                    	int	0x21			; terminate
+   103                                  
+   104                                  .notreached:
+   105 0000008D EBFE                    	jmp	.notreached
