@@ -26,6 +26,12 @@ else
 DRV_TRM_NBAS += sdl2
 endif
 
+ifeq "$(PCE_ENABLE_SDL3)" "1"
+DRV_TRM_BAS += sdl3
+else
+DRV_TRM_NBAS += sdl3
+endif
+
 DRV_TRM_SRC  := $(foreach f,$(DRV_TRM_BAS),$(rel)/$(f).c)
 DRV_TRM_NSRC := $(foreach f,$(DRV_TRM_NBAS),$(rel)/$(f).c)
 DRV_TRM_OBJ  := $(foreach f,$(DRV_TRM_BAS),$(rel)/$(f).o)
@@ -46,6 +52,10 @@ $(rel)/sdl.o:	$(rel)/sdl.c
 	$(QR)$(CC) -c $(CFLAGS_DEFAULT) $(PCE_SDL_CFLAGS) -o $@ $<
 
 $(rel)/sdl2.o: $(rel)/sdl2.c
+	$(QP)echo "  CC     $@"
+	$(QR)$(CC) -c $(CFLAGS_DEFAULT) $(PCE_SDL_CFLAGS) -o $@ $<
+
+$(rel)/sdl3.o: $(rel)/sdl3.c
 	$(QP)echo "  CC     $@"
 	$(QR)$(CC) -c $(CFLAGS_DEFAULT) $(PCE_SDL_CFLAGS) -o $@ $<
 

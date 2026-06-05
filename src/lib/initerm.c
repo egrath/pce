@@ -137,6 +137,12 @@ terminal_t *ini_get_terminal (ini_sct_t *ini, const char *def)
 		if (trm == NULL) {
 			pce_log (MSG_ERR, "*** setting up sdl2 terminal failed\n");
 		}
+#elif defined (PCE_ENABLE_SDL3)
+		trm = sdl3_new (sct);
+		
+		if (trm == NULL) {
+			pce_log (MSG_ERR, "*** setting up sdl3 terminal failed\n");
+		}
 #else
 		pce_log (MSG_ERR, "*** terminal driver 'sdl' not supported\n");
 #endif

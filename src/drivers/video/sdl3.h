@@ -3,7 +3,7 @@
  *****************************************************************************/
 
 /*****************************************************************************
- * File name:   src/drivers/video/sdl3.h                                     *
+ * File name:   src/drivers/video/sdl2.h                                     *
  * Created:     2015-06-15 by Hampa Hug <hampa@hampa.ch>                     *
  * Copyright:   (C) 2015-2018 Hampa Hug <hampa@hampa.ch>                     *
  *****************************************************************************/
@@ -20,8 +20,8 @@
  *****************************************************************************/
 
 
-#ifndef PCE_VIDEO_SDL2_H
-#define PCE_VIDEO_SDL2_H 1
+#ifndef PCE_VIDEO_SDL3_H
+#define PCE_VIDEO_SDL3_H 1
 
 
 #include <stdio.h>
@@ -36,11 +36,11 @@
 typedef struct {
 	SDL_Scancode sdlkey;
 	pce_key_t    pcekey;
-} sdl2_keymap_t;
+} sdl3_keymap_t;
 
 
 /*!***************************************************************************
- * @short The SDL2 terminal structure
+ * @short The SDL3 terminal structure
  *****************************************************************************/
 typedef struct {
 	terminal_t    trm;
@@ -66,14 +66,14 @@ typedef struct {
 	char          ignore_keys;
 
 	unsigned      keymap_cnt;
-	sdl2_keymap_t *keymap;
-} sdl2_t;
+	sdl3_keymap_t *keymap;
+} sdl3_t;
 
 
 /*!***************************************************************************
- * @short Create a new SDL2 terminal
+ * @short Create a new SDL3 terminal
  *****************************************************************************/
-terminal_t *sdl2_new (ini_sct_t *ini);
+terminal_t *sdl3_new (ini_sct_t *ini);
 
 
 #endif

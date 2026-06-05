@@ -251,6 +251,7 @@ AC_SUBST(PCE_X11_LIBS)
 PCE_ENABLE_SDL=0
 PCE_ENABLE_SDL1=0
 PCE_ENABLE_SDL2=0
+PCE_ENABLE_SDL3=0
 AC_MSG_CHECKING([for SDL])
 AC_ARG_WITH(sdl,
   [AS_HELP_STRING([--with-sdl], [Build the SDL terminal [detected]])],
@@ -269,10 +270,19 @@ AC_ARG_WITH(sdl,
 		PCE_ENABLE_SDL2=1
 		AC_MSG_RESULT([2 (forced)])
 		;;
+	"3")
+		PCE_ENABLE_SDL=1
+		PCE_ENABLE_SDL3=1
+		AC_MSG_RESULT([3 (forced)])
+		;;
 	esac
   ],
   [
-	if sdl2-config --version > /dev/null 2>&1 ; then
+	if pkg-config --exists sdl3 > /dev/null 2>&1; then
+		PCE_ENABLE_SDL=1
+		PCE_ENABLE_SDL3=1
+		AC_MSG_RESULT([3 (detected)])
+	elif sdl2-config --version > /dev/null 2>&1 ; then
 		PCE_ENABLE_SDL=1
 		PCE_ENABLE_SDL2=1
 		AC_MSG_RESULT([2 (detected)])
@@ -285,7 +295,7 @@ AC_ARG_WITH(sdl,
 	fi
   ]
 )
-if test "x$PCE_ENABLE_SDL1" != "x0" ; then
+if test "x$PCE_ENABLE_SDL1" != "x0" ; then 
 	PCE_SDL_CFLAGS=`sdl-config --cflags`
 	PCE_SDL_LIBS=`sdl-config --libs`
 	AC_DEFINE(PCE_ENABLE_SDL)
@@ -295,10 +305,16 @@ elif test "x$PCE_ENABLE_SDL2" != "x0" ; then
 	PCE_SDL_LIBS=`sdl2-config --libs`
 	AC_DEFINE(PCE_ENABLE_SDL)
 	AC_DEFINE(PCE_ENABLE_SDL2)
+elif test "x$PCE_ENABLE_SDL3" != "x0" ; then
+	PCE_SDL_CFLAGS="`pkg-config --cflags sdl3` `pkg-config --cflags sdl3`/SDL3"
+	PCE_SDL_LIBS=`pkg-config --libs sdl3`
+	AC_DEFINE(PCE_ENABLE_SDL)
+	AC_DEFINE(PCE_ENABLE_SDL3)
 fi
 AC_SUBST(PCE_ENABLE_SDL)
 AC_SUBST(PCE_ENABLE_SDL1)
 AC_SUBST(PCE_ENABLE_SDL2)
+AC_SUBST(PCE_ENABLE_SDL3)
 AC_SUBST(PCE_SDL_CFLAGS)
 AC_SUBST(PCE_SDL_LIBS)
 
@@ -1051,6 +1067,12 @@ if test "x$PCE_ENABLE_SDL2" = "x1" ; then
 	term1="$term1 sdl2"
 else
 	term2="$term2 sdl2"
+fi
+
+if test "x$PCE_ENABLE_SDL3" = "x1" ; then
+	term1="$term1 sdl3"
+else
+	term2="$term2 sdl3"
 fi
 
 

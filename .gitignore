@@ -1,8 +1,10 @@
 **.o
+/autom4te.cache
 /Makefile
 Makefile.inc
 /config.log
 /config.status
+/configure~
 /src/arch/dos/pce-dos
 /src/arch/macplus/pce-mac-classic.cfg
 /src/arch/macplus/pce-mac-plus.cfg
