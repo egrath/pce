@@ -153,6 +153,7 @@ static sdl3_keymap_t keymap[] = {
 static
 void sdl3_set_keymap (sdl3_t *sdl, SDL_Scancode src, pce_key_t dst)
 {
+	/*
 	unsigned      i;
 	sdl3_keymap_t *tmp;
 
@@ -174,11 +175,13 @@ void sdl3_set_keymap (sdl3_t *sdl, SDL_Scancode src, pce_key_t dst)
 
 	sdl->keymap = tmp;
 	sdl->keymap_cnt += 1;
+	*/
 }
 
 static
 void sdl3_init_keymap_default (sdl3_t *sdl)
 {
+	/*
 	unsigned i, n;
 
 	sdl->keymap_cnt = 0;
@@ -200,11 +203,13 @@ void sdl3_init_keymap_default (sdl3_t *sdl)
 	}
 
 	sdl->keymap_cnt = n;
+	*/
 }
 
 static
 void sdl3_init_keymap_user (sdl3_t *sdl, ini_sct_t *sct)
 {
+	/*
 	const char    *str;
 	ini_val_t     *val;
 	unsigned long sdlkey;
@@ -231,22 +236,26 @@ void sdl3_init_keymap_user (sdl3_t *sdl, ini_sct_t *sct)
 
 		sdl3_set_keymap (sdl, (SDL_Scancode) sdlkey, pcekey);
 	}
+	*/
 }
 
 static
 void sdl3_grab_mouse (sdl3_t *sdl, int grab)
 {
+	/*
 	sdl->grab = (grab != 0);
 
 	if (sdl->window != NULL) {
 		SDL_SetWindowGrab (sdl->window, sdl->grab ? SDL_TRUE : SDL_FALSE);
 		SDL_SetRelativeMouseMode (sdl->grab ? SDL_TRUE : SDL_FALSE);
 	}
+	*/
 }
 
 static
 void sdl3_set_fullscreen (sdl3_t *sdl, int val)
 {
+	/*
 	if ((val != 0) == (sdl->fullscreen != 0)) {
 		return;
 	}
@@ -256,11 +265,13 @@ void sdl3_set_fullscreen (sdl3_t *sdl, int val)
 	if (sdl->window != NULL) {
 		SDL_SetWindowFullscreen (sdl->window, val ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 	}
+	*/
 }
 
 static
 int sdl3_set_window_size (sdl3_t *sdl, unsigned w, unsigned h)
 {
+	/*
 	if ((w == 0) || (h == 0)) {
 		return (1);
 	}
@@ -275,11 +286,14 @@ int sdl3_set_window_size (sdl3_t *sdl, unsigned w, unsigned h)
 	sdl->wdw_h = h;
 
 	return (0);
+	*/
+	return 0;
 }
 
 static
 int sdl3_set_window_size_auto (sdl3_t *sdl)
 {
+	/*
 	unsigned fx, fy, tw, th, ww, wh;
 
 	tw = sdl->trm.w;
@@ -295,11 +309,14 @@ int sdl3_set_window_size_auto (sdl3_t *sdl)
 	}
 
 	return (0);
+	*/
+	return 0;
 }
 
 static
 int sdl3_set_frame_size (sdl3_t *sdl)
 {
+	/*
 	unsigned tw, th;
 
 	tw = sdl->trm.w;
@@ -331,11 +348,14 @@ int sdl3_set_frame_size (sdl3_t *sdl)
 	sdl->txt_h = th;
 
 	return (0);
+	*/
+	return 0;
 }
 
 static
 unsigned sdl3_map_key (sdl3_t *sdl, SDL_Scancode key)
 {
+	/*
 	unsigned i;
 
 	for (i = 0; i < sdl->keymap_cnt; i++) {
@@ -345,11 +365,14 @@ unsigned sdl3_map_key (sdl3_t *sdl, SDL_Scancode key)
 	}
 
 	return (PCE_KEY_NONE);
+	*/
+	return 0;
 }
 
 static
 void sdl3_update (sdl3_t *sdl)
 {
+	/*
 	terminal_t *trm;
 	void       *pixels;
 	int        pitch;
@@ -376,11 +399,13 @@ void sdl3_update (sdl3_t *sdl)
 
 	SDL_RenderCopy (sdl->render, sdl->texture, NULL, NULL);
 	SDL_RenderPresent (sdl->render);
+	*/
 }
 
 static
 void sdl3_event_keydown (sdl3_t *sdl, SDL_Scancode key, SDL_Keymod mod)
 {
+	/*
 	pce_key_t pcekey;
 
 	if (sdl->ignore_keys) {
@@ -421,11 +446,13 @@ void sdl3_event_keydown (sdl3_t *sdl, SDL_Scancode key, SDL_Keymod mod)
 	if (key == SDL_SCANCODE_NUMLOCKCLEAR) {
 		trm_set_key (&sdl->trm, PCE_KEY_EVENT_UP, pcekey);
 	}
+	*/
 }
 
 static
 void sdl3_event_keyup (sdl3_t *sdl, SDL_Scancode key, SDL_Keymod mod)
 {
+	/*
 	pce_key_t pcekey;
 
 	if (sdl->ignore_keys) {
@@ -451,11 +478,13 @@ void sdl3_event_keyup (sdl3_t *sdl, SDL_Scancode key, SDL_Keymod mod)
 
 		trm_set_key (&sdl->trm, PCE_KEY_EVENT_UP, pcekey);
 	}
+	*/
 }
 
 static
 void sdl3_event_mouse_button (sdl3_t *sdl, int down, unsigned button)
 {
+	/*
 	if (button == 0) {
 		return;
 	}
@@ -488,11 +517,13 @@ void sdl3_event_mouse_button (sdl3_t *sdl, int down, unsigned button)
 	}
 
 	trm_set_mouse (&sdl->trm, 0, 0, sdl->button);
+	*/
 }
 
 static
 void sdl3_event_mouse_motion (sdl3_t *sdl, int dx, int dy)
 {
+	/*
 	if (sdl->grab == 0) {
 		return;
 	}
@@ -502,11 +533,13 @@ void sdl3_event_mouse_motion (sdl3_t *sdl, int dx, int dy)
 	}
 
 	trm_set_mouse (&sdl->trm, dx, dy, sdl->button);
+	*/
 }
 
 static
 void sdl3_event_window (sdl3_t *sdl, SDL_WindowEvent *evt)
 {
+	/*
 	if (sdl->window == NULL) {
 		return;
 	}
@@ -574,11 +607,13 @@ void sdl3_event_window (sdl3_t *sdl, SDL_WindowEvent *evt)
 		fprintf (stderr, "sdl3: window event %u\n", evt->event);
 		break;
 	}
+	*/
 }
 
 static
 void sdl3_check (sdl3_t *sdl)
 {
+	/*
 	SDL_Event evt;
 
 	while (SDL_PollEvent (&evt)) {
@@ -632,11 +667,13 @@ void sdl3_check (sdl3_t *sdl)
 	if (sdl->ignore_keys) {
 		sdl->ignore_keys = 0;
 	}
+	*/
 }
 
 static
 int sdl3_set_msg_trm (sdl3_t *sdl, const char *msg, const char *val)
 {
+	/*
 	if (val == NULL) {
 		val = "";
 	}
@@ -675,17 +712,22 @@ int sdl3_set_msg_trm (sdl3_t *sdl, const char *msg, const char *val)
 	}
 
 	return (-1);
+	*/
+	return -1;
 }
 
 static
 void sdl3_del (sdl3_t *sdl)
 {
+	/*
 	free (sdl);
+	*/
 }
 
 static
 int sdl3_open (sdl3_t *sdl, unsigned w, unsigned h)
 {
+	/*
 	unsigned x, y;
 	unsigned fx, fy;
 	unsigned flags;
@@ -744,11 +786,14 @@ int sdl3_open (sdl3_t *sdl, unsigned w, unsigned h)
 	}
 
 	return (0);
+	*/
+	return 0;
 }
 
 static
 int sdl3_close (sdl3_t *sdl)
 {
+	/*
 	sdl3_grab_mouse (sdl, 0);
 
 	if (sdl->texture != NULL) {
@@ -767,11 +812,14 @@ int sdl3_close (sdl3_t *sdl)
 	}
 
 	return (0);
+	*/
+	return 0;
 }
 
 static
 void sdl3_init (sdl3_t *sdl, ini_sct_t *sct)
 {
+	/*
 	int        fs, rep;
 	const char *str;
 
@@ -819,6 +867,7 @@ void sdl3_init (sdl3_t *sdl, ini_sct_t *sct)
 	sdl3_init_keymap_user (sdl, sct);
 
 	SDL_SetHint (SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+	*/
 }
 
 terminal_t *sdl3_new (ini_sct_t *sct)

@@ -3016,6 +3016,12 @@ src/drivers/sound/sound-sdl.o: src/drivers/sound/sound-sdl.c \
 	src/drivers/sound/sound-sdl.h \
 	src/drivers/sound/sound.h
 
+src/drivers/sound/sound-sdl3.o: src/drivers/sound/sound-sdl3.c \
+	src/drivers/options.h \
+	src/drivers/sound/filter.h \
+	src/drivers/sound/sound-sdl3.h \
+	src/drivers/sound/sound.h
+
 src/drivers/sound/sound-wav.o: src/drivers/sound/sound-wav.c \
 	src/drivers/options.h \
 	src/drivers/sound/filter.h \
@@ -3051,6 +3057,13 @@ src/drivers/video/sdl2.o: src/drivers/video/sdl2.c \
 	src/config.h \
 	src/drivers/video/keys.h \
 	src/drivers/video/sdl2.h \
+	src/drivers/video/terminal.h \
+	src/libini/libini.h
+
+src/drivers/video/sdl3.o: src/drivers/video/sdl3.c \
+	src/config.h \
+	src/drivers/video/keys.h \
+	src/drivers/video/sdl3.h \
 	src/drivers/video/terminal.h \
 	src/libini/libini.h
 

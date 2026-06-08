@@ -44,10 +44,15 @@ struct snd_drv_list drvtab[] = {
 	{ "oss", snd_oss_open },
 #endif
 
-#ifdef PCE_ENABLE_SDL
+#ifdef PCE_ENABLE_SDL1
 	{ "sdl", snd_sdl_open },
 #endif
-
+#ifdef PCE_ENABLE_SDL2
+	{ "sdl", snd_sdl_open },
+#endif
+#ifdef PCE_ENABLE_SDL3
+	{ "sdl3", snd_sdl3_open },
+#endif
 	{ NULL, NULL }
 };
 

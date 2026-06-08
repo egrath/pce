@@ -152,5 +152,7 @@ sound_drv_t *snd_oss_open (const char *name);
 
 sound_drv_t *snd_sdl_open (const char *name);
 
+sound_drv_t *snd_sdl3_open (const char *name);
+
 
 #endif
