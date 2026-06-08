@@ -6,3 +6,5 @@ make -j $(nproc)
 
 Binaries are in src/arch/macplus
 
+new driver name for the terminal is "sdl3"
+

@@ -148,6 +148,34 @@ static sdl3_keymap_t keymap[] = {
 	{ 0,                         PCE_KEY_NONE }
 };
 
+/*
+ * this function calculates the destination rectangle for our framebuffer to retain the correct
+ * aspect ratio.
+ */
+static
+void sdl3_calc_dest_rect(SDL_FRect *rect, unsigned win_w, unsigned win_h, unsigned tex_w, unsigned tex_h)
+{
+    float win_aspect = (float)win_w / (float)win_h;
+    float tex_aspect = (float)tex_w / (float)tex_h;
+
+    if (win_aspect > tex_aspect) {
+        // Window is wider than texture -> pillarbox (black on left/right)
+        float height = (float)win_h;
+        float width = height * tex_aspect;
+        rect->x = ((float)win_w - width) / 2.0f;
+        rect->y = 0.0f;
+        rect->w = width;
+        rect->h = height;
+    } else {
+        // Window is taller than texture -> letterbox (black on top/bottom)
+        float width = (float)win_w;
+        float height = width / tex_aspect;
+        rect->x = 0.0f;
+        rect->y = ((float)win_h - height) / 2.0f;
+        rect->w = width;
+        rect->h = height;
+    }
+}
 
 static
 void sdl3_set_keymap (sdl3_t *sdl, SDL_Scancode src, pce_key_t dst)
@@ -347,11 +375,12 @@ unsigned sdl3_map_key (sdl3_t *sdl, SDL_Scancode key)
 }
 
 static
-void sdl3_update (sdl3_t *sdl)
+void sdl3_update(sdl3_t *sdl)
 {
 	terminal_t *trm;
 	void       *pixels;
 	int        pitch;
+	SDL_FRect  dest_rect;
 
 	trm = &sdl->trm;
 
@@ -361,7 +390,7 @@ void sdl3_update (sdl3_t *sdl)
 		return;
 	}
 
-	if (sdl3_set_frame_size (sdl)) {
+	if (sdl3_set_frame_size(sdl)) {
 		return;
 	}
 
@@ -369,12 +398,20 @@ void sdl3_update (sdl3_t *sdl)
 		return;
 	}
 
-	SDL_LockTexture (sdl->texture, NULL, &pixels, &pitch);
-	memcpy (pixels, trm->buf, 3UL * trm->w * trm->h);
-	SDL_UnlockTexture (sdl->texture);
+	SDL_LockTexture(sdl->texture, NULL, &pixels, &pitch);
+	memcpy(pixels, trm->buf, 3UL * trm->w * trm->h);
+	SDL_UnlockTexture(sdl->texture);
 
-	SDL_RenderTexture (sdl->render, sdl->texture, NULL, NULL);
-	SDL_RenderPresent (sdl->render);
+	/* Compute destination rectangle that preserves aspect ratio */
+	sdl3_calc_dest_rect(&dest_rect, sdl->wdw_w, sdl->wdw_h, sdl->txt_w, sdl->txt_h);
+
+	/* Clear the renderer with black */
+	SDL_SetRenderDrawColor(sdl->render, 0, 0, 0, 255);
+	SDL_RenderClear(sdl->render);
+
+	/* Render the texture with correct aspect ratio */
+	SDL_RenderTexture(sdl->render, sdl->texture, NULL, &dest_rect);
+	SDL_RenderPresent(sdl->render);
 }
 
 static
