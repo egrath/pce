@@ -31,7 +31,6 @@
 #include <drivers/video/keys.h>
 #include <drivers/video/sdl3.h>
 
-
 static sdl3_keymap_t keymap[] = {
 	{ SDL_SCANCODE_ESCAPE,       PCE_KEY_ESC },
 	{ SDL_SCANCODE_F1,           PCE_KEY_F1 },
@@ -153,7 +152,6 @@ static sdl3_keymap_t keymap[] = {
 static
 void sdl3_set_keymap (sdl3_t *sdl, SDL_Scancode src, pce_key_t dst)
 {
-	/*
 	unsigned      i;
 	sdl3_keymap_t *tmp;
 
@@ -175,13 +173,11 @@ void sdl3_set_keymap (sdl3_t *sdl, SDL_Scancode src, pce_key_t dst)
 
 	sdl->keymap = tmp;
 	sdl->keymap_cnt += 1;
-	*/
 }
 
 static
 void sdl3_init_keymap_default (sdl3_t *sdl)
 {
-	/*
 	unsigned i, n;
 
 	sdl->keymap_cnt = 0;
@@ -203,13 +199,11 @@ void sdl3_init_keymap_default (sdl3_t *sdl)
 	}
 
 	sdl->keymap_cnt = n;
-	*/
 }
 
 static
 void sdl3_init_keymap_user (sdl3_t *sdl, ini_sct_t *sct)
 {
-	/*
 	const char    *str;
 	ini_val_t     *val;
 	unsigned long sdlkey;
@@ -236,26 +230,22 @@ void sdl3_init_keymap_user (sdl3_t *sdl, ini_sct_t *sct)
 
 		sdl3_set_keymap (sdl, (SDL_Scancode) sdlkey, pcekey);
 	}
-	*/
 }
 
 static
 void sdl3_grab_mouse (sdl3_t *sdl, int grab)
 {
-	/*
 	sdl->grab = (grab != 0);
 
 	if (sdl->window != NULL) {
-		SDL_SetWindowGrab (sdl->window, sdl->grab ? SDL_TRUE : SDL_FALSE);
-		SDL_SetRelativeMouseMode (sdl->grab ? SDL_TRUE : SDL_FALSE);
+		SDL_SetWindowMouseGrab (sdl->window, sdl->grab);
+		SDL_SetWindowRelativeMouseMode (sdl->window, sdl->grab);
 	}
-	*/
 }
 
 static
 void sdl3_set_fullscreen (sdl3_t *sdl, int val)
 {
-	/*
 	if ((val != 0) == (sdl->fullscreen != 0)) {
 		return;
 	}
@@ -263,15 +253,13 @@ void sdl3_set_fullscreen (sdl3_t *sdl, int val)
 	sdl->fullscreen = (val != 0);
 
 	if (sdl->window != NULL) {
-		SDL_SetWindowFullscreen (sdl->window, val ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+		SDL_SetWindowFullscreen (sdl->window, val);
 	}
-	*/
 }
 
 static
 int sdl3_set_window_size (sdl3_t *sdl, unsigned w, unsigned h)
 {
-	/*
 	if ((w == 0) || (h == 0)) {
 		return (1);
 	}
@@ -286,14 +274,11 @@ int sdl3_set_window_size (sdl3_t *sdl, unsigned w, unsigned h)
 	sdl->wdw_h = h;
 
 	return (0);
-	*/
-	return 0;
 }
 
 static
 int sdl3_set_window_size_auto (sdl3_t *sdl)
 {
-	/*
 	unsigned fx, fy, tw, th, ww, wh;
 
 	tw = sdl->trm.w;
@@ -309,14 +294,11 @@ int sdl3_set_window_size_auto (sdl3_t *sdl)
 	}
 
 	return (0);
-	*/
-	return 0;
 }
 
 static
 int sdl3_set_frame_size (sdl3_t *sdl)
 {
-	/*
 	unsigned tw, th;
 
 	tw = sdl->trm.w;
@@ -348,14 +330,11 @@ int sdl3_set_frame_size (sdl3_t *sdl)
 	sdl->txt_h = th;
 
 	return (0);
-	*/
-	return 0;
 }
 
 static
 unsigned sdl3_map_key (sdl3_t *sdl, SDL_Scancode key)
 {
-	/*
 	unsigned i;
 
 	for (i = 0; i < sdl->keymap_cnt; i++) {
@@ -365,14 +344,11 @@ unsigned sdl3_map_key (sdl3_t *sdl, SDL_Scancode key)
 	}
 
 	return (PCE_KEY_NONE);
-	*/
-	return 0;
 }
 
 static
 void sdl3_update (sdl3_t *sdl)
 {
-	/*
 	terminal_t *trm;
 	void       *pixels;
 	int        pitch;
@@ -397,15 +373,13 @@ void sdl3_update (sdl3_t *sdl)
 	memcpy (pixels, trm->buf, 3UL * trm->w * trm->h);
 	SDL_UnlockTexture (sdl->texture);
 
-	SDL_RenderCopy (sdl->render, sdl->texture, NULL, NULL);
+	SDL_RenderTexture (sdl->render, sdl->texture, NULL, NULL);
 	SDL_RenderPresent (sdl->render);
-	*/
 }
 
 static
 void sdl3_event_keydown (sdl3_t *sdl, SDL_Scancode key, SDL_Keymod mod)
 {
-	/*
 	pce_key_t pcekey;
 
 	if (sdl->ignore_keys) {
@@ -416,7 +390,7 @@ void sdl3_event_keydown (sdl3_t *sdl, SDL_Scancode key, SDL_Keymod mod)
 		if (sdl->grave_down) {
 			return;
 		}
-		else if (mod & KMOD_LCTRL) {
+		else if (mod & SDL_KMOD_LCTRL) {
 			sdl->grave_down = 1;
 			sdl3_grab_mouse (sdl, 0);
 			sdl3_set_fullscreen (sdl, 0);
@@ -446,13 +420,11 @@ void sdl3_event_keydown (sdl3_t *sdl, SDL_Scancode key, SDL_Keymod mod)
 	if (key == SDL_SCANCODE_NUMLOCKCLEAR) {
 		trm_set_key (&sdl->trm, PCE_KEY_EVENT_UP, pcekey);
 	}
-	*/
 }
 
 static
 void sdl3_event_keyup (sdl3_t *sdl, SDL_Scancode key, SDL_Keymod mod)
 {
-	/*
 	pce_key_t pcekey;
 
 	if (sdl->ignore_keys) {
@@ -478,13 +450,11 @@ void sdl3_event_keyup (sdl3_t *sdl, SDL_Scancode key, SDL_Keymod mod)
 
 		trm_set_key (&sdl->trm, PCE_KEY_EVENT_UP, pcekey);
 	}
-	*/
 }
 
 static
 void sdl3_event_mouse_button (sdl3_t *sdl, int down, unsigned button)
 {
-	/*
 	if (button == 0) {
 		return;
 	}
@@ -517,13 +487,11 @@ void sdl3_event_mouse_button (sdl3_t *sdl, int down, unsigned button)
 	}
 
 	trm_set_mouse (&sdl->trm, 0, 0, sdl->button);
-	*/
 }
 
 static
 void sdl3_event_mouse_motion (sdl3_t *sdl, int dx, int dy)
 {
-	/*
 	if (sdl->grab == 0) {
 		return;
 	}
@@ -533,13 +501,11 @@ void sdl3_event_mouse_motion (sdl3_t *sdl, int dx, int dy)
 	}
 
 	trm_set_mouse (&sdl->trm, dx, dy, sdl->button);
-	*/
 }
 
 static
 void sdl3_event_window (sdl3_t *sdl, SDL_WindowEvent *evt)
 {
-	/*
 	if (sdl->window == NULL) {
 		return;
 	}
@@ -548,12 +514,8 @@ void sdl3_event_window (sdl3_t *sdl, SDL_WindowEvent *evt)
 		return;
 	}
 
-	switch (evt->event) {
-	case SDL_WINDOWEVENT_SIZE_CHANGED:
-		sdl->update = 1;
-		break;
-
-	case SDL_WINDOWEVENT_RESIZED:
+	switch (evt->type) {
+	case SDL_EVENT_WINDOW_RESIZED:
 		if ((sdl->wdw_w != evt->data1) || (sdl->wdw_h != evt->data2)) {
 			sdl->wdw_w = evt->data1;
 			sdl->wdw_h = evt->data2;
@@ -562,96 +524,85 @@ void sdl3_event_window (sdl3_t *sdl, SDL_WindowEvent *evt)
 		sdl->update = 1;
 		break;
 
-	case SDL_WINDOWEVENT_RESTORED:
+	case SDL_EVENT_WINDOW_RESTORED:
+	case SDL_EVENT_WINDOW_EXPOSED:
+	case SDL_EVENT_WINDOW_SHOWN:
+	case SDL_EVENT_WINDOW_MAXIMIZED:
 		sdl->update = 1;
 		break;
 
-	case SDL_WINDOWEVENT_EXPOSED:
-		sdl->update = 1;
+	case SDL_EVENT_WINDOW_MOVED:
+	case SDL_EVENT_WINDOW_MOUSE_ENTER:
+	case SDL_EVENT_WINDOW_MOUSE_LEAVE:
 		break;
 
-	case SDL_WINDOWEVENT_MOVED:
-		break;
-
-	case SDL_WINDOWEVENT_ENTER:
-		break;
-
-	case SDL_WINDOWEVENT_LEAVE:
-		break;
-
-	case SDL_WINDOWEVENT_FOCUS_GAINED:
+	case SDL_EVENT_WINDOW_FOCUS_GAINED:
 		sdl->ignore_keys = 1;
 		break;
 
-	case SDL_WINDOWEVENT_FOCUS_LOST:
-		break;
-
-	case SDL_WINDOWEVENT_SHOWN:
-		sdl->update = 1;
-		break;
-
-	case SDL_WINDOWEVENT_HIDDEN:
-		break;
-
-	case SDL_WINDOWEVENT_MINIMIZED:
-		break;
-
-	case SDL_WINDOWEVENT_MAXIMIZED:
-		sdl->update = 1;
-		break;
-
-	case SDL_WINDOWEVENT_TAKE_FOCUS:
+	case SDL_EVENT_WINDOW_FOCUS_LOST:
+	case SDL_EVENT_WINDOW_HIDDEN:
+	case SDL_EVENT_WINDOW_MINIMIZED:
 		break;
 
 	default:
-		fprintf (stderr, "sdl3: window event %u\n", evt->event);
+		fprintf (stderr, "sdl3: window event %u\n", evt->type);
 		break;
 	}
-	*/
 }
 
 static
 void sdl3_check (sdl3_t *sdl)
 {
-	/*
 	SDL_Event evt;
 
 	while (SDL_PollEvent (&evt)) {
 		switch (evt.type) {
-		case SDL_KEYDOWN:
-			sdl3_event_keydown (sdl, evt.key.keysym.scancode, evt.key.keysym.mod);
+		case SDL_EVENT_KEY_DOWN:
+			sdl3_event_keydown (sdl, evt.key.scancode, evt.key.mod);
 			break;
 
-		case SDL_KEYUP:
-			sdl3_event_keyup (sdl, evt.key.keysym.scancode, evt.key.keysym.mod);
+		case SDL_EVENT_KEY_UP:
+			sdl3_event_keyup (sdl, evt.key.scancode, evt.key.mod);
 			break;
 
-		case SDL_TEXTINPUT:
-		case SDL_KEYMAPCHANGED:
+		case SDL_EVENT_TEXT_INPUT:
+		case SDL_EVENT_KEYMAP_CHANGED:
 			break;
 
-		case SDL_MOUSEBUTTONDOWN:
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
 			sdl3_event_mouse_button (sdl, 1, evt.button.button);
 			break;
 
-		case SDL_MOUSEBUTTONUP:
+		case SDL_EVENT_MOUSE_BUTTON_UP:
 			sdl3_event_mouse_button (sdl, 0, evt.button.button);
 			break;
 
-		case SDL_MOUSEMOTION:
+		case SDL_EVENT_MOUSE_MOTION:
 			sdl3_event_mouse_motion (sdl, evt.motion.xrel, evt.motion.yrel);
 			break;
 
-		case SDL_WINDOWEVENT:
+		case SDL_EVENT_WINDOW_RESIZED:
+		case SDL_EVENT_WINDOW_RESTORED:
+		case SDL_EVENT_WINDOW_EXPOSED:
+		case SDL_EVENT_WINDOW_SHOWN:
+		case SDL_EVENT_WINDOW_MAXIMIZED:
+		case SDL_EVENT_WINDOW_MOVED:
+		case SDL_EVENT_WINDOW_MOUSE_ENTER:
+		case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+		case SDL_EVENT_WINDOW_FOCUS_GAINED:
+		case SDL_EVENT_WINDOW_FOCUS_LOST:
+		case SDL_EVENT_WINDOW_HIDDEN:
+		case SDL_EVENT_WINDOW_MINIMIZED:
 			sdl3_event_window (sdl, &evt.window);
 			break;
 
-		case SDL_QUIT:
+		case SDL_EVENT_QUIT:
 			sdl3_grab_mouse (sdl, 0);
 			trm_set_msg_emu (&sdl->trm, "emu.exit", "1");
 			break;
 
-		case SDL_AUDIODEVICEADDED:
+		case SDL_EVENT_AUDIO_DEVICE_ADDED:
 			break;
 
 		default:
@@ -667,13 +618,11 @@ void sdl3_check (sdl3_t *sdl)
 	if (sdl->ignore_keys) {
 		sdl->ignore_keys = 0;
 	}
-	*/
 }
 
 static
 int sdl3_set_msg_trm (sdl3_t *sdl, const char *msg, const char *val)
 {
-	/*
 	if (val == NULL) {
 		val = "";
 	}
@@ -712,22 +661,17 @@ int sdl3_set_msg_trm (sdl3_t *sdl, const char *msg, const char *val)
 	}
 
 	return (-1);
-	*/
-	return -1;
 }
 
 static
 void sdl3_del (sdl3_t *sdl)
 {
-	/*
 	free (sdl);
-	*/
 }
 
 static
 int sdl3_open (sdl3_t *sdl, unsigned w, unsigned h)
 {
-	/*
 	unsigned x, y;
 	unsigned fx, fy;
 	unsigned flags;
@@ -752,21 +696,21 @@ int sdl3_open (sdl3_t *sdl, unsigned w, unsigned h)
 	sdl->render = NULL;
 	sdl->texture = NULL;
 
-	SDL_EventState (SDL_MOUSEMOTION, SDL_ENABLE);
-
+	/*
 	SDL_SetHint (SDL_HINT_GRAB_KEYBOARD, "1");
 	SDL_SetHint (SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
+	*/
 
 	flags = SDL_WINDOW_RESIZABLE;
 
 	if (sdl->fullscreen) {
-		flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		flags |= SDL_WINDOW_FULLSCREEN;
 	}
 
 	x = SDL_WINDOWPOS_UNDEFINED;
 	y = SDL_WINDOWPOS_UNDEFINED;
 
-	sdl->window = SDL_CreateWindow ("pce", x, y, w, h, flags);
+	sdl->window = SDL_CreateWindow ("pce", w, h, flags);
 
 	if (sdl->window == NULL) {
 		fprintf (stderr, "sdl3: window\n");
@@ -778,7 +722,7 @@ int sdl3_open (sdl3_t *sdl, unsigned w, unsigned h)
 	sdl->wdw_w = w;
 	sdl->wdw_h = h;
 
-	sdl->render = SDL_CreateRenderer (sdl->window, -1, 0);
+	sdl->render = SDL_CreateRenderer (sdl->window, NULL);
 
 	if (sdl->render == NULL) {
 		fprintf (stderr, "sdl3: renderer\n");
@@ -786,14 +730,11 @@ int sdl3_open (sdl3_t *sdl, unsigned w, unsigned h)
 	}
 
 	return (0);
-	*/
-	return 0;
 }
 
 static
 int sdl3_close (sdl3_t *sdl)
 {
-	/*
 	sdl3_grab_mouse (sdl, 0);
 
 	if (sdl->texture != NULL) {
@@ -812,14 +753,11 @@ int sdl3_close (sdl3_t *sdl)
 	}
 
 	return (0);
-	*/
-	return 0;
 }
 
 static
 void sdl3_init (sdl3_t *sdl, ini_sct_t *sct)
 {
-	/*
 	int        fs, rep;
 	const char *str;
 
@@ -855,7 +793,9 @@ void sdl3_init (sdl3_t *sdl, ini_sct_t *sct)
 	sdl->report_keys = (rep != 0);
 
 	if (ini_get_string (sct, "scale_quality", &str, NULL) == 0) {
+		/*
 		SDL_SetHint (SDL_HINT_RENDER_SCALE_QUALITY, str);
+		*/
 	}
 
 	sdl->autosize = 1;
@@ -867,7 +807,6 @@ void sdl3_init (sdl3_t *sdl, ini_sct_t *sct)
 	sdl3_init_keymap_user (sdl, sct);
 
 	SDL_SetHint (SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-	*/
 }
 
 terminal_t *sdl3_new (ini_sct_t *sct)
