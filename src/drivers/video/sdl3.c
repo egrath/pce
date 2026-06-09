@@ -153,7 +153,7 @@ static sdl3_keymap_t keymap[] = {
  * aspect ratio and fill the maximum size of the current window.
  */
 static
-void sdl3_calc_framebuffer_render_rect(sdl3_t *sdl)
+void sdl3_update_framebuffer_render_rect(sdl3_t *sdl)
 {
 	float scale_w, scale_h, scale;
 
@@ -319,12 +319,15 @@ int sdl3_set_window_size (sdl3_t *sdl, unsigned w, unsigned h)
 static
 int sdl3_set_frame_size (sdl3_t *sdl)
 {
-	unsigned tw, th;
+	unsigned terminal_width, terminal_height;
 
-	tw = sdl->trm.w;
-	th = sdl->trm.h;
+	terminal_width = sdl->trm.w;
+	terminal_height = sdl->trm.h;
 
-	if ((sdl->txt_w == tw) && (sdl->txt_h == th)) {
+	/* if our texture, which is later used to copy the framebuffer to already
+	   has the size of the terminal, no need to do anything. The terminal dimension is
+	   the size of the emulated computers screen in PCE terminology */
+	if ((sdl->txt_w == terminal_width) && (sdl->txt_h == terminal_height)) {
 		return (0);
 	}
 
@@ -334,9 +337,10 @@ int sdl3_set_frame_size (sdl3_t *sdl)
 	}
 
 	sdl->texture = SDL_CreateTexture (sdl->render,
-		SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, tw, th
+		SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING,
+		terminal_width,
+		terminal_height
 	);
-
 	SDL_SetTextureScaleMode(sdl->texture,sdl->framebuffer_scale_mode);
 
 	if (sdl->texture == NULL) {
@@ -344,8 +348,8 @@ int sdl3_set_frame_size (sdl3_t *sdl)
 		return (1);
 	}
 
-	sdl->txt_w = tw;
-	sdl->txt_h = th;
+	sdl->txt_w = terminal_width;
+	sdl->txt_h = terminal_height;
 
 	return (0);
 }
@@ -387,7 +391,10 @@ void sdl3_update(sdl3_t *sdl)
 	if ((sdl->texture == NULL) || (sdl->render == NULL)) {
 		return;
 	}
-	
+
+	/* update the destination rectangle we have to render to */
+	sdl3_update_framebuffer_render_rect (sdl);
+
 	/*
 	This is the SDL2 method for copying the pixels to our texture. However,
 	SDL_UpdateTexture is slightly faster at average
@@ -399,7 +406,7 @@ void sdl3_update(sdl3_t *sdl)
 	SDL_UpdateTexture(sdl->texture,NULL,trm->buf,trm->w * 3UL);
 
 	/* Clear the renderer with black */
-	SDL_SetRenderDrawColor (sdl->render, 0, 0, 0, 255);
+	SDL_SetRenderDrawColor (sdl->render,80,80,80, 255);
 	SDL_RenderClear (sdl->render);
 
 	/* Render the texture with correct aspect ratio */
@@ -545,13 +552,12 @@ void sdl3_event_window (sdl3_t *sdl, SDL_WindowEvent *evt)
 	}
 
 	switch (evt->type) {
+	case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+	case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
 	case SDL_EVENT_WINDOW_RESIZED:
 		if ((sdl->wdw_w != evt->data1) || (sdl->wdw_h != evt->data2)) {
 			sdl->wdw_w = evt->data1;
 			sdl->wdw_h = evt->data2;
-
-			/* calculate the scale of our framebuffer texture to perfectly fit */
-			sdl3_calc_framebuffer_render_rect(sdl);
 		}
 		sdl->update = 1;
 		break;
@@ -560,9 +566,6 @@ void sdl3_event_window (sdl3_t *sdl, SDL_WindowEvent *evt)
 	case SDL_EVENT_WINDOW_EXPOSED:
 	case SDL_EVENT_WINDOW_SHOWN:
 	case SDL_EVENT_WINDOW_MAXIMIZED:
-		/* we also need to calculate the scale of our framebuffer texture to perfectly
-		   fit when the window is shown first */
-		sdl3_calc_framebuffer_render_rect(sdl);
 		sdl->update = 1;
 		break;
 
@@ -617,6 +620,8 @@ void sdl3_check (sdl3_t *sdl)
 			sdl3_event_mouse_motion (sdl, evt.motion.xrel, evt.motion.yrel);
 			break;
 
+		case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+		case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
 		case SDL_EVENT_WINDOW_RESIZED:
 		case SDL_EVENT_WINDOW_RESTORED:
 		case SDL_EVENT_WINDOW_EXPOSED:
@@ -825,15 +830,22 @@ void sdl3_init (sdl3_t *sdl, ini_sct_t *sct)
 
 	/* for scaling our framebuffer to the window size, we use either the method
 	   PIXELART which was introduced in SDL 3.4, or whatever the user specified
-	   in the configuration file */
+	   in the configuration file. If compiled against a lower version, we fall back
+	   to linear scaling */
+#if SDL_VERSION_ATLEAST(3,4,0)
 	sdl->framebuffer_scale_mode = SDL_SCALEMODE_PIXELART;
+#else
+	sdl->framebuffer_scale_mode = SDL_SCALEMODE_LINEAR;
+#endif
 	if (ini_get_string (sct, "scale_quality", &str, NULL) == 0) {
 		if (strcmp(str,"nearest") == 0)
 			sdl->framebuffer_scale_mode = SDL_SCALEMODE_NEAREST;
 		else if (strcmp(str,"linear") == 0)
 			sdl->framebuffer_scale_mode = SDL_SCALEMODE_LINEAR;
+#if SDL_VERSION_ATLEAST(3,4,0)
 		else if (strcmp(str,"pixelart") == 0)
 			sdl->framebuffer_scale_mode = SDL_SCALEMODE_PIXELART;
+#endif
 	}
 
 	sdl->grave_down = 0;
