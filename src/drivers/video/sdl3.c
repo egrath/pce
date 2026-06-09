@@ -4,7 +4,7 @@
 
 /*****************************************************************************
  * File name:   src/drivers/video/sdl3.c                                     *
- * Created:     2015-06-15 by Hampa Hug <hampa@hampa.ch>                     *
+ * Created:     2026-06-09 Egon Rath <egon.rath@gmail.com>                   *
  * Copyright:   (C) 2015-2025 Hampa Hug <hampa@hampa.ch>                     *
  *****************************************************************************/
 
@@ -150,31 +150,43 @@ static sdl3_keymap_t keymap[] = {
 
 /*
  * this function calculates the destination rectangle for our framebuffer to retain the correct
- * aspect ratio.
+ * aspect ratio and fill the maximum size of the current window.
  */
 static
-void sdl3_calc_dest_rect(SDL_FRect *rect, unsigned win_w, unsigned win_h, unsigned tex_w, unsigned tex_h)
+void sdl3_calc_framebuffer_render_rect(sdl3_t *sdl)
 {
-    float win_aspect = (float)win_w / (float)win_h;
-    float tex_aspect = (float)tex_w / (float)tex_h;
+	float scale_w, scale_h, scale;
 
-    if (win_aspect > tex_aspect) {
-        // Window is wider than texture -> pillarbox (black on left/right)
-        float height = (float)win_h;
-        float width = height * tex_aspect;
-        rect->x = ((float)win_w - width) / 2.0f;
-        rect->y = 0.0f;
-        rect->w = width;
-        rect->h = height;
-    } else {
-        // Window is taller than texture -> letterbox (black on top/bottom)
-        float width = (float)win_w;
-        float height = width / tex_aspect;
-        rect->x = 0.0f;
-        rect->y = ((float)win_h - height) / 2.0f;
-        rect->w = width;
-        rect->h = height;
-    }
+	/* first, we have to calculate the scale factor of the texture to nicely
+	   fit into the current window size */
+	scale_w = (float) sdl->wdw_w / sdl->txt_w;
+	scale_h = (float) sdl->wdw_h / sdl->txt_h;
+	scale = (scale_w < scale_h) ? scale_w : scale_h;
+
+	/* now, set the width and height of the rendered texture */
+	sdl->framebuffer_render_rect.h = sdl->txt_h * scale;
+	sdl->framebuffer_render_rect.w = sdl->txt_w * scale;
+
+	/* now, set the position where of the rendered texture */
+	sdl->framebuffer_render_rect.x = (sdl->wdw_w - sdl->framebuffer_render_rect.w)/2;
+	sdl->framebuffer_render_rect.y = (sdl->wdw_h - sdl->framebuffer_render_rect.h)/2;
+}
+
+/* print information about the SDL subsystem*/
+static
+void sdl3_print_info (sdl3_t *sdl)
+{
+	int i;
+
+	fprintf (stdout,"sdl3: drivers available\n");
+
+	fprintf (stdout,"sdl3: SDL_VIDEODRIVER:\n");
+	for (i=0;i<SDL_GetNumVideoDrivers();i++)
+		fprintf (stdout,"sdl3:     %s\n",SDL_GetVideoDriver(i));
+
+	fprintf (stdout,"sdl3: SDL_RENDER_DRIVER:\n");
+	for (i=0;i<SDL_GetNumRenderDrivers();i++)
+		fprintf (stdout,"sdl3:     %s %s\n",SDL_GetRenderDriver(i),strcmp(SDL_GetRendererName(sdl->render),SDL_GetRenderDriver(i))==0 ? "(CURRENT)" : "" );
 }
 
 static
@@ -305,36 +317,12 @@ int sdl3_set_window_size (sdl3_t *sdl, unsigned w, unsigned h)
 }
 
 static
-int sdl3_set_window_size_auto (sdl3_t *sdl)
-{
-	unsigned fx, fy, tw, th, ww, wh;
-
-	tw = sdl->trm.w;
-	th = sdl->trm.h;
-
-	trm_get_scale (&sdl->trm, tw, th, &fx, &fy);
-
-	ww = fx * tw;
-	wh = fy * th;
-
-	if (sdl3_set_window_size (sdl, ww, wh)) {
-		return (1);
-	}
-
-	return (0);
-}
-
-static
 int sdl3_set_frame_size (sdl3_t *sdl)
 {
 	unsigned tw, th;
 
 	tw = sdl->trm.w;
 	th = sdl->trm.h;
-
-	if (sdl->autosize) {
-		sdl3_set_window_size_auto (sdl);
-	}
 
 	if ((sdl->txt_w == tw) && (sdl->txt_h == th)) {
 		return (0);
@@ -348,6 +336,8 @@ int sdl3_set_frame_size (sdl3_t *sdl)
 	sdl->texture = SDL_CreateTexture (sdl->render,
 		SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, tw, th
 	);
+
+	SDL_SetTextureScaleMode(sdl->texture,sdl->framebuffer_scale_mode);
 
 	if (sdl->texture == NULL) {
 		fprintf (stderr, "sdl3: texture\n");
@@ -390,28 +380,31 @@ void sdl3_update(sdl3_t *sdl)
 		return;
 	}
 
-	if (sdl3_set_frame_size(sdl)) {
+	if (sdl3_set_frame_size (sdl)) {
 		return;
 	}
 
 	if ((sdl->texture == NULL) || (sdl->render == NULL)) {
 		return;
 	}
+	
+	/*
+	This is the SDL2 method for copying the pixels to our texture. However,
+	SDL_UpdateTexture is slightly faster at average
 
-	SDL_LockTexture(sdl->texture, NULL, &pixels, &pitch);
-	memcpy(pixels, trm->buf, 3UL * trm->w * trm->h);
-	SDL_UnlockTexture(sdl->texture);
-
-	/* Compute destination rectangle that preserves aspect ratio */
-	sdl3_calc_dest_rect(&dest_rect, sdl->wdw_w, sdl->wdw_h, sdl->txt_w, sdl->txt_h);
+	SDL_LockTexture (sdl->texture, NULL, &pixels, &pitch);
+	memcpy (pixels, trm->buf, 3UL * trm->w * trm->h);
+	SDL_UnlockTexture (sdl->texture);
+	*/
+	SDL_UpdateTexture(sdl->texture,NULL,trm->buf,trm->w * 3UL);
 
 	/* Clear the renderer with black */
-	SDL_SetRenderDrawColor(sdl->render, 0, 0, 0, 255);
-	SDL_RenderClear(sdl->render);
+	SDL_SetRenderDrawColor (sdl->render, 0, 0, 0, 255);
+	SDL_RenderClear (sdl->render);
 
 	/* Render the texture with correct aspect ratio */
-	SDL_RenderTexture(sdl->render, sdl->texture, NULL, &dest_rect);
-	SDL_RenderPresent(sdl->render);
+	SDL_RenderTexture (sdl->render, sdl->texture, NULL, &(sdl->framebuffer_render_rect));
+	SDL_RenderPresent (sdl->render);
 }
 
 static
@@ -556,7 +549,9 @@ void sdl3_event_window (sdl3_t *sdl, SDL_WindowEvent *evt)
 		if ((sdl->wdw_w != evt->data1) || (sdl->wdw_h != evt->data2)) {
 			sdl->wdw_w = evt->data1;
 			sdl->wdw_h = evt->data2;
-			sdl->autosize = 0;
+
+			/* calculate the scale of our framebuffer texture to perfectly fit */
+			sdl3_calc_framebuffer_render_rect(sdl);
 		}
 		sdl->update = 1;
 		break;
@@ -565,6 +560,9 @@ void sdl3_event_window (sdl3_t *sdl, SDL_WindowEvent *evt)
 	case SDL_EVENT_WINDOW_EXPOSED:
 	case SDL_EVENT_WINDOW_SHOWN:
 	case SDL_EVENT_WINDOW_MAXIMIZED:
+		/* we also need to calculate the scale of our framebuffer texture to perfectly
+		   fit when the window is shown first */
+		sdl3_calc_framebuffer_render_rect(sdl);
 		sdl->update = 1;
 		break;
 
@@ -691,11 +689,6 @@ int sdl3_set_msg_trm (sdl3_t *sdl, const char *msg, const char *val)
 
 		return (0);
 	}
-	else if (strcmp (msg, "term.autosize") == 0) {
-		sdl->autosize = 1;
-		sdl->update = 1;
-		return (0);
-	}
 
 	return (-1);
 }
@@ -724,7 +717,7 @@ int sdl3_open (sdl3_t *sdl, unsigned w, unsigned h)
 	}
 
 	if (SDL_WasInit (SDL_INIT_VIDEO) == 0) {
-		if (SDL_InitSubSystem (SDL_INIT_VIDEO) < 0) {
+		if (SDL_InitSubSystem (SDL_INIT_VIDEO) == 0) {
 			return (1);
 		}
 	}
@@ -733,11 +726,7 @@ int sdl3_open (sdl3_t *sdl, unsigned w, unsigned h)
 	sdl->render = NULL;
 	sdl->texture = NULL;
 
-	/*
-	SDL_SetHint (SDL_HINT_GRAB_KEYBOARD, "1");
-	SDL_SetHint (SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1");
-	*/
-
+	/* create the window */
 	flags = SDL_WINDOW_RESIZABLE;
 
 	if (sdl->fullscreen) {
@@ -759,12 +748,17 @@ int sdl3_open (sdl3_t *sdl, unsigned w, unsigned h)
 	sdl->wdw_w = w;
 	sdl->wdw_h = h;
 
+	/* create the renderer */
 	sdl->render = SDL_CreateRenderer (sdl->window, NULL);
+	SDL_SetRenderVSync(sdl->render,SDL_RENDERER_VSYNC_DISABLED);
 
 	if (sdl->render == NULL) {
 		fprintf (stderr, "sdl3: renderer\n");
 		return (1);
 	}
+
+	/* print some info */
+	sdl3_print_info(sdl);
 
 	return (0);
 }
@@ -829,13 +823,18 @@ void sdl3_init (sdl3_t *sdl, ini_sct_t *sct)
 	ini_get_bool (sct, "report_keys", &rep, 0);
 	sdl->report_keys = (rep != 0);
 
+	/* for scaling our framebuffer to the window size, we use either the method
+	   PIXELART which was introduced in SDL 3.4, or whatever the user specified
+	   in the configuration file */
+	sdl->framebuffer_scale_mode = SDL_SCALEMODE_PIXELART;
 	if (ini_get_string (sct, "scale_quality", &str, NULL) == 0) {
-		/*
-		SDL_SetHint (SDL_HINT_RENDER_SCALE_QUALITY, str);
-		*/
+		if (strcmp(str,"nearest") == 0)
+			sdl->framebuffer_scale_mode = SDL_SCALEMODE_NEAREST;
+		else if (strcmp(str,"linear") == 0)
+			sdl->framebuffer_scale_mode = SDL_SCALEMODE_LINEAR;
+		else if (strcmp(str,"pixelart") == 0)
+			sdl->framebuffer_scale_mode = SDL_SCALEMODE_PIXELART;
 	}
-
-	sdl->autosize = 1;
 
 	sdl->grave_down = 0;
 	sdl->ignore_keys = 0;

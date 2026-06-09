@@ -1,4 +1,5 @@
 **.o
+/.vscode
 /autom4te.cache
 /Makefile
 Makefile.inc

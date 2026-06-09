@@ -49,6 +49,9 @@ typedef struct {
 	SDL_Renderer  *render;
 	SDL_Texture   *texture;
 
+	SDL_FRect     framebuffer_render_rect;
+	SDL_ScaleMode framebuffer_scale_mode;
+
 	unsigned      txt_w;
 	unsigned      txt_h;
 
@@ -61,7 +64,6 @@ typedef struct {
 	char          fullscreen;
 	char          grab;
 	char          report_keys;
-	char          autosize;
 	char          grave_down;
 	char          ignore_keys;
 
