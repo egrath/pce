@@ -406,7 +406,7 @@ void sdl3_update(sdl3_t *sdl)
 	SDL_UpdateTexture(sdl->texture,NULL,trm->buf,trm->w * 3UL);
 
 	/* Clear the renderer with black */
-	SDL_SetRenderDrawColor (sdl->render,80,80,80, 255);
+	SDL_SetRenderDrawColor (sdl->render,0,0,0,255);
 	SDL_RenderClear (sdl->render);
 
 	/* Render the texture with correct aspect ratio */

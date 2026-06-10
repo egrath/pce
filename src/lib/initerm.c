@@ -53,6 +53,12 @@ int trm_is_valid (const char *str)
 	}
 #endif
 
+#ifdef PCE_ENABLE_SDL3
+	if (strcmp (str,"sdl3") == 0) {
+		return (1);
+	}
+#endif
+
 	return (0);
 }
 
