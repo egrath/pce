@@ -4,7 +4,7 @@
 
 /*****************************************************************************
  * File name:   src/drivers/sound/sound-sdl3.h                               *
- * Created:     2010-08-12 by Hampa Hug <hampa@hampa.ch>                     *
+ * Created:     2026-06-10 Egon Rath <egon.rath@gmail.com>                   *
  * Copyright:   (C) 2010 Hampa Hug <hampa@hampa.ch>                          *
  *****************************************************************************/
 
@@ -23,8 +23,9 @@
 #ifndef PCE_DRIVERS_SOUND_SDL3_H
 #define PCE_DRIVERS_SOUND_SDL3_H 1
 
-
 #include <drivers/sound/sound.h>
+
+#include <SDL.h>
 
 
 typedef struct sound_sdl3_buf_t {
@@ -44,7 +45,10 @@ typedef struct sound_sdl3_t {
 	int         sign;
 	int         big_endian;
 
-	unsigned        buf_cnt;
+	unsigned    buf_cnt;
+
+	SDL_AudioDeviceID    dev;	
+	SDL_AudioStream      *audio_stream;
 
 	sound_sdl3_buf_t *head;
 	sound_sdl3_buf_t *tail;

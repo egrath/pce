@@ -4,7 +4,7 @@
 
 /*****************************************************************************
  * File name:   src/drivers/sound/sound-sdl3.c                               *
- * Created:     2010-08-12 by Hampa Hug <hampa@hampa.ch>                     *
+ * Created:     2026-06-10 Egon Rath <egon.rath@gmail.com>                   *
  * Copyright:   (C) 2010-2017 Hampa Hug <hampa@hampa.ch>                     *
  *****************************************************************************/
 
@@ -18,7 +18,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU  General *
  * Public License for more details.                                          *
  *****************************************************************************/
-
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,13 +34,11 @@
 #define DEBUG_SND_SDL 0
 #endif
 
-
 static
 sound_sdl3_buf_t *snd_sdl3_buf_new (sound_sdl3_t *drv, unsigned size)
 {
-	/*
 	unsigned char   *tmp;
-	sound_sdl_buf_t *buf;
+	sound_sdl3_buf_t *buf;
 
 	if (drv->free != NULL) {
 		buf = drv->free;
@@ -52,7 +49,7 @@ sound_sdl3_buf_t *snd_sdl3_buf_new (sound_sdl3_t *drv, unsigned size)
 			return (NULL);
 		}
 
-		buf = malloc (sizeof (sound_sdl_buf_t));
+		buf = malloc (sizeof (sound_sdl3_buf_t));
 
 		if (buf == NULL) {
 			return (NULL);
@@ -86,15 +83,12 @@ sound_sdl3_buf_t *snd_sdl3_buf_new (sound_sdl3_t *drv, unsigned size)
 	}
 
 	return (buf);
-	*/
-	return NULL;
 }
 
 static
 void snd_sdl3_buf_free_list (sound_sdl3_buf_t *buf)
 {
-	/*
-	sound_sdl_buf_t *tmp;
+	sound_sdl3_buf_t *tmp;
 
 	while (buf != NULL) {
 		tmp = buf;
@@ -103,52 +97,45 @@ void snd_sdl3_buf_free_list (sound_sdl3_buf_t *buf)
 		free (tmp->data);
 		free (tmp);
 	}
-	*/
-
 }
 
 static
 void snd_sdl3_close (sound_drv_t *sdrv)
 {
-	/*
-	sound_sdl_t *drv;
+	sound_sdl3_t *drv;
 
 	drv = sdrv->ext;
 
 	if (drv->is_open) {
-		SDL_CloseAudio();
+		SDL_CloseAudioDevice (drv->dev);
 	}
 
-	snd_sdl_buf_free_list (drv->head);
-	snd_sdl_buf_free_list (drv->free);
+	snd_sdl3_buf_free_list (drv->head);
+	snd_sdl3_buf_free_list (drv->free);
 
 	snd_free (sdrv);
 
 	free (drv);
-	*/
 }
 
 static
 int snd_sdl3_write (sound_drv_t *sdrv, const uint16_t *buf, unsigned cnt)
 {
-	/*
 	int             sign;
 	unsigned long   bcnt, scnt;
-	sound_sdl_buf_t *bbuf;
-	sound_sdl_t     *drv;
+	sound_sdl3_buf_t *bbuf;
+	sound_sdl3_t     *drv;
 
 	drv = sdrv->ext;
 
 	scnt = (unsigned long) sdrv->channels * (unsigned long) cnt;
 	bcnt = 2 * scnt;
 
-	SDL_LockAudio();
-	bbuf = snd_sdl_buf_new (drv, bcnt);
-	SDL_UnlockAudio();
+	bbuf = snd_sdl3_buf_new (drv, bcnt);
 
 	if (bbuf == NULL) {
 #if DEBUG_SND_SDL >= 1
-		fprintf (stderr, "snd-sdl: buffer overrun\n");
+		fprintf (stderr, "snd-sdl3: buffer overrun\n");
 #endif
 		return (1);
 	}
@@ -160,8 +147,6 @@ int snd_sdl3_write (sound_drv_t *sdrv, const uint16_t *buf, unsigned cnt)
 	bbuf->idx = 0;
 	bbuf->cnt = bcnt;
 
-	SDL_LockAudio();
-
 	if (drv->tail == NULL) {
 		drv->head = bbuf;
 	}
@@ -171,30 +156,25 @@ int snd_sdl3_write (sound_drv_t *sdrv, const uint16_t *buf, unsigned cnt)
 
 	drv->tail = bbuf;
 
-	SDL_UnlockAudio();
-
 	if (drv->is_paused) {
-		SDL_PauseAudio (0);
+		SDL_ResumeAudioDevice (drv->dev);
 		drv->is_paused = 0;
 	}
 
 	return (0);
-	*/
-	return 0;
 }
 
 static
 void snd_sdl3_callback (void *user, Uint8 *buf, int cnt)
 {
-	/*
 	int             n;
-	sound_sdl_t     *drv;
-	sound_sdl_buf_t *src;
+	sound_sdl3_t     *drv;
+	sound_sdl3_buf_t *src;
 
 	drv = user;
 
 	if (drv->head == NULL) {
-		SDL_PauseAudio (1);
+		SDL_PauseAudioDevice (drv->dev);
 		drv->is_paused = 1;
 		return;
 	}
@@ -202,7 +182,7 @@ void snd_sdl3_callback (void *user, Uint8 *buf, int cnt)
 	while (cnt > 0) {
 		if (drv->head == NULL) {
 #if DEBUG_SND_SDL >= 1
-			fprintf (stderr, "snd-sdl: buffer underrun\n");
+			fprintf (stderr, "snd-sdl3: buffer underrun\n");
 #endif
 			memset (buf, 0, cnt);
 			return;
@@ -233,48 +213,57 @@ void snd_sdl3_callback (void *user, Uint8 *buf, int cnt)
 			cnt = 0;
 		}
 	}
-	*/
+}
+
+static 
+void SDLCALL snd_sdl3_new_callback (void *userdata,SDL_AudioStream *stream, int additional, int total)
+{
+	if (additional>0) {
+		Uint8 *data = SDL_stack_alloc(Uint8, additional);
+		if (data) {
+			snd_sdl3_callback (userdata,data,additional);
+			SDL_PutAudioStreamData (stream,data,additional);
+			SDL_stack_free (data);
+		}
+	}
 }
 
 static
 int snd_sdl3_set_params (sound_drv_t *sdrv, unsigned chn, unsigned long srate, int sign)
 {
-	/*
-	sound_sdl_t   *drv;
-	SDL_AudioSpec req;
+	sound_sdl3_t   *drv;
+	SDL_AudioSpec   req;
 
 	drv = sdrv->ext;
 
-	if (SDL_WasInit (SDL_INIT_AUDIO) == 0) {
-		if (SDL_InitSubSystem (SDL_INIT_AUDIO) < 0) {
-			fprintf (stderr,
-				"snd-sdl: error initializing audio subsystem (%s)\n",
-				SDL_GetError()
-			);
-			return (1);
-		}
-	}
-
-	if (drv->is_open) {
-		SDL_CloseAudio();
-		drv->is_open = 0;
-	}
-
-	req.freq = srate;
-	req.format = AUDIO_S16LSB;
-	req.channels = chn;
-	req.samples = 1024;
-	req.callback = snd_sdl_callback;
-	req.userdata = drv;
-
-	if (SDL_OpenAudio (&req, NULL) < 0) {
-		fprintf (stderr, "snd-sdl: error opening output (%s)\n",
+	if (SDL_InitSubSystem (SDL_INIT_AUDIO) == 0) {
+		fprintf (stderr,
+			"snd-sdl3: error initializing audio subsystem (%s)\n",
 			SDL_GetError()
 		);
 		return (1);
 	}
 
-	SDL_PauseAudio (1);
+	if (drv->is_open) {
+		SDL_CloseAudioDevice (drv->dev);
+		drv->is_open = 0;
+	}
+
+	SDL_memset (&req, 0, sizeof (req));
+	req.freq     = srate;
+	req.format   = SDL_AUDIO_S16LE;
+	req.channels = chn;
+
+	drv->dev = SDL_OpenAudioDevice (SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &req);
+	drv->audio_stream = SDL_OpenAudioDeviceStream (drv->dev,&req,snd_sdl3_new_callback,drv);
+	if (drv->dev == 0) {
+		fprintf (stderr, "snd-sdl3: error opening output (%s)\n",
+			SDL_GetError()
+		);
+		return (1);
+	}
+
+	SDL_PauseAudioDevice (drv->dev);
 
 	drv->is_open = 1;
 	drv->is_paused = 1;
@@ -283,20 +272,18 @@ int snd_sdl3_set_params (sound_drv_t *sdrv, unsigned chn, unsigned long srate, i
 	drv->big_endian = 0;
 
 	return (0);
-	*/
-	return 0;
 }
 
 static
 int snd_sdl3_init (sound_sdl3_t *drv, const char *name)
 {
-	/*
 	snd_init (&drv->sdrv, drv);
 
-	drv->sdrv.close = snd_sdl_close;
-	drv->sdrv.write = snd_sdl_write;
-	drv->sdrv.set_params = snd_sdl_set_params;
+	drv->sdrv.close = snd_sdl3_close;
+	drv->sdrv.write = snd_sdl3_write;
+	drv->sdrv.set_params = snd_sdl3_set_params;
 
+	drv->dev = 0;
 	drv->is_open = 0;
 	drv->is_paused = 1;
 
@@ -307,28 +294,22 @@ int snd_sdl3_init (sound_sdl3_t *drv, const char *name)
 	drv->free = NULL;
 
 	return (0);
-	*/
-
-	return 0;
 }
 
 sound_drv_t *snd_sdl3_open (const char *name)
 {
-	/*
-	sound_sdl_t *drv;
+	sound_sdl3_t *drv;
 
-	drv = malloc (sizeof (sound_sdl_t));
+	drv = malloc (sizeof (sound_sdl3_t));
 
 	if (drv == NULL) {
 		return (NULL);
 	}
 
-	if (snd_sdl_init (drv, name)) {
-		snd_sdl_close (&drv->sdrv);
+	if (snd_sdl3_init (drv, name)) {
+		snd_sdl3_close (&drv->sdrv);
 		return (NULL);
 	}
 
 	return (&drv->sdrv);
-	*/
-	return NULL;
 }
