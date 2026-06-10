@@ -23,15 +23,17 @@ driver="sdl3:wav=speaker.wav:lowpass=0:wavfilter=0"
 For the video driver modify your terminal section:
 ```
 driver="sdl3"
+
+There is also a new option in the terminal section, named 'scale_quality' which controls the algorithm used for scaling the framebuffer to the output window. By default, it's set to 'pixelart' for SDL>=3.4 and 'linear' for SDL<3.4. The other option is nearest.
 ```
 
 ## How to build it
 
 My main interest is the Macintosh Plus emulation, so I outline building just this one here:
 
-´´´
+```
 autoreconf -vis
 ./configure --disable-tun --disable-char-posix --disable-char-ppp --disable-char-pty --disable-char-slip --disable-char-tcp --disable-char-termios --disable-char-wincom --disable-readline --disable-atari-st --disable-cpm80 --disable-ibmpc --disable-ibmpc-rom --disable-rc759 --disable-sim405 --disable-sims32 --disable-simarm --disable-vic20 --disable-spectrum --disable-sound-oss --without-x --with-sdl=3
 make -j $(nproc)
-´´´
+```
 

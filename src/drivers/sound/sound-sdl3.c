@@ -157,7 +157,6 @@ int snd_sdl3_write (sound_drv_t *sdrv, const uint16_t *buf, unsigned cnt)
 	drv->tail = bbuf;
 
 	if (drv->is_paused) {
-		SDL_ResumeAudioDevice (drv->dev);
 		SDL_ResumeAudioStreamDevice(drv->audio_stream);
 		drv->is_paused = 0;
 	}
@@ -175,7 +174,6 @@ void snd_sdl3_callback (void *user, Uint8 *buf, int cnt)
 	drv = user;
 
 	if (drv->head == NULL) {
-		SDL_PauseAudioDevice (drv->dev);
 		SDL_PauseAudioStreamDevice(drv->audio_stream);
 		drv->is_paused = 1;
 		return;
@@ -276,8 +274,9 @@ int snd_sdl3_set_params (sound_drv_t *sdrv, unsigned chn, unsigned long srate, i
 	else
 		fprintf(stdout,"snd-sdl3: opened audio output stream\n");
 
-	SDL_PauseAudioDevice (drv->dev);
-	SDL_PauseAudioStreamDevice(drv->audio_stream);
+	/* note: the audio device opened by SDL_OpenAudioDevice starts unpause, however, the
+	         audio stream starts paused. We never pause the audio device itself, as it results
+		 in small clicks in the output, we just pause/resume the stream */
 
 	drv->is_open = 1;
 	drv->is_paused = 1;
