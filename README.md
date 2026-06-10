@@ -11,7 +11,19 @@ The original version supports X11, SDL1 and SDL2. I wanted to have a SDL3 driver
 * SDL2 is no longer under active development
 * SDL3 has a nice integrated upscaling shader called 'Pixelart' which looks absolutely stunning
 
-As SDL3 is quite different from SDL1/2 in some aspects and because I wanted to keep the source tree as clean as possible, I did not integrate the driver in the already existing SDL1/2 driver, but created a new one called 'sdl3'. To use this driver, set the driver to 'sdl3' in your configuration file.
+As SDL3 is quite different from SDL1/2 in some aspects and because I wanted to keep the source tree as clean as possible, I did not integrate the driver in the already existing SDL1/2 driver, but created a new one called 'sdl3'.
+
+To use the new driver, you have to modify your configuration file to use 'sdl3' as your terminal driver and 'sdl3' as your sound driver.
+
+For the sound driver modify your sound section:
+```
+driver="sdl3:wav=speaker.wav:lowpass=0:wavfilter=0"
+```
+
+For the video driver modify your terminal section:
+```
+driver="sdl3"
+```
 
 ## How to build it
 

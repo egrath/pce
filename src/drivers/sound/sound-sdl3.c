@@ -39,7 +39,7 @@ sound_sdl3_buf_t *snd_sdl3_buf_new (sound_sdl3_t *drv, unsigned size)
 {
 	unsigned char   *tmp;
 	sound_sdl3_buf_t *buf;
-
+	
 	if (drv->free != NULL) {
 		buf = drv->free;
 		drv->free = drv->free->next;
@@ -89,7 +89,7 @@ static
 void snd_sdl3_buf_free_list (sound_sdl3_buf_t *buf)
 {
 	sound_sdl3_buf_t *tmp;
-
+	
 	while (buf != NULL) {
 		tmp = buf;
 		buf = buf->next;
@@ -103,7 +103,7 @@ static
 void snd_sdl3_close (sound_drv_t *sdrv)
 {
 	sound_sdl3_t *drv;
-
+	
 	drv = sdrv->ext;
 
 	if (drv->is_open) {
@@ -125,7 +125,7 @@ int snd_sdl3_write (sound_drv_t *sdrv, const uint16_t *buf, unsigned cnt)
 	unsigned long   bcnt, scnt;
 	sound_sdl3_buf_t *bbuf;
 	sound_sdl3_t     *drv;
-
+	
 	drv = sdrv->ext;
 
 	scnt = (unsigned long) sdrv->channels * (unsigned long) cnt;
@@ -158,6 +158,7 @@ int snd_sdl3_write (sound_drv_t *sdrv, const uint16_t *buf, unsigned cnt)
 
 	if (drv->is_paused) {
 		SDL_ResumeAudioDevice (drv->dev);
+		SDL_ResumeAudioStreamDevice(drv->audio_stream);
 		drv->is_paused = 0;
 	}
 
@@ -170,11 +171,12 @@ void snd_sdl3_callback (void *user, Uint8 *buf, int cnt)
 	int             n;
 	sound_sdl3_t     *drv;
 	sound_sdl3_buf_t *src;
-
+	
 	drv = user;
 
 	if (drv->head == NULL) {
 		SDL_PauseAudioDevice (drv->dev);
+		SDL_PauseAudioStreamDevice(drv->audio_stream);
 		drv->is_paused = 1;
 		return;
 	}
@@ -233,7 +235,7 @@ int snd_sdl3_set_params (sound_drv_t *sdrv, unsigned chn, unsigned long srate, i
 {
 	sound_sdl3_t   *drv;
 	SDL_AudioSpec   req;
-
+	
 	drv = sdrv->ext;
 
 	if (SDL_InitSubSystem (SDL_INIT_AUDIO) == 0) {
@@ -254,16 +256,28 @@ int snd_sdl3_set_params (sound_drv_t *sdrv, unsigned chn, unsigned long srate, i
 	req.format   = SDL_AUDIO_S16LE;
 	req.channels = chn;
 
+	/* open the audio device itself for playback */
 	drv->dev = SDL_OpenAudioDevice (SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &req);
-	drv->audio_stream = SDL_OpenAudioDeviceStream (drv->dev,&req,snd_sdl3_new_callback,drv);
 	if (drv->dev == 0) {
-		fprintf (stderr, "snd-sdl3: error opening output (%s)\n",
+		fprintf (stderr, "snd-sdl3: error opening output device (%s)\n",
 			SDL_GetError()
 		);
 		return (1);
 	}
+	else
+		fprintf (stdout, "snd-sdl3: opened audio output (%s)\n", SDL_GetAudioDeviceName (drv->dev));
+		
+	/* open a audio stream for this device for playing back something */
+	drv->audio_stream = SDL_OpenAudioDeviceStream (drv->dev,&req,snd_sdl3_new_callback,drv);
+	if (drv->audio_stream == NULL) {
+		fprintf (stderr, "snd-sdl3: error opening output audio stream (%s)\n", SDL_GetError());
+		return (1);
+	}
+	else
+		fprintf(stdout,"snd-sdl3: opened audio output stream\n");
 
 	SDL_PauseAudioDevice (drv->dev);
+	SDL_PauseAudioStreamDevice(drv->audio_stream);
 
 	drv->is_open = 1;
 	drv->is_paused = 1;
@@ -299,7 +313,7 @@ int snd_sdl3_init (sound_sdl3_t *drv, const char *name)
 sound_drv_t *snd_sdl3_open (const char *name)
 {
 	sound_sdl3_t *drv;
-
+	
 	drv = malloc (sizeof (sound_sdl3_t));
 
 	if (drv == NULL) {
