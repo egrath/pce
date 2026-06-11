@@ -581,6 +581,8 @@ void sdl3_event_window (sdl3_t *sdl, SDL_WindowEvent *evt)
 	case SDL_EVENT_WINDOW_FOCUS_LOST:
 	case SDL_EVENT_WINDOW_HIDDEN:
 	case SDL_EVENT_WINDOW_MINIMIZED:
+	case SDL_EVENT_WINDOW_SAFE_AREA_CHANGED:
+	case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
 		break;
 
 	default:
@@ -608,6 +610,9 @@ void sdl3_check (sdl3_t *sdl)
 		case SDL_EVENT_KEYMAP_CHANGED:
 			break;
 
+		case SDL_EVENT_MOUSE_WHEEL:
+			break;
+
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
 			sdl3_event_mouse_button (sdl, 1, evt.button.button);
 			break;
@@ -620,6 +625,8 @@ void sdl3_check (sdl3_t *sdl)
 			sdl3_event_mouse_motion (sdl, evt.motion.xrel, evt.motion.yrel);
 			break;
 
+		case SDL_EVENT_WINDOW_SAFE_AREA_CHANGED:
+		case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
 		case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
 		case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
 		case SDL_EVENT_WINDOW_RESIZED:
