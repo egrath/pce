@@ -1131,12 +1131,17 @@ else
 	sound2="$sound2 oss"
 fi
 
-if test "x$PCE_ENABLE_SDL" = "x1" ; then
+if [ test "x$PCE_ENABLE_SDL1" = "x1" ] || [ test "x$PCE_ENABLE_SDL2" = "x1" ]; then
 	sound1="$sound1 sdl"
 else
 	sound2="$sound2 sdl"
 fi
 
+if test "x$PCE_ENABLE_SDL3" = "x1" ; then
+	sound1="$sound1 sdl3"
+else
+	sound2="$sound2 sdl3"
+fi
 
 option1=""
 option2=""
